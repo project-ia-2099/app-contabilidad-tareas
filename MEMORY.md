@@ -40,3 +40,12 @@
 - [x] **Tarea 7:** Establecer convención oficial de nombres de repositorios (`app-<area>-<nombre>`, máx. 35 caracteres) y aislamiento por esquemas SQL + Migraciones EF Core (`HasDefaultSchema` / `MigrationsHistoryTable`) para compartir la misma base de datos entre áreas.
 - [x] **Tarea 8:** Exigir lógica de negocio 100% en Backend (preparado para futura unificación por microservicios) y estandarizar el Frontend con Design System Minimalista Pastel, Font Awesome Free y cero emoticones Unicode.
 
+
+### App Tareas de Contabilidad
+- Alcance aprobado: crear, editar, completar, reabrir, eliminar y filtrar tareas por estado.
+- Persistencia SQL Server con esquema exclusivo `contabilidad_tareas`.
+- Lista individual vinculada a una clave aleatoria guardada en el navegador.
+- [x] Implementar y validar en local. Pruebas de backend y frontend, migración en SQL Server y recorrido de navegador con datos de prueba.
+- [ ] Publicar PR y verificar CI.
+- [ ] Desplegar y verificar QA.
+- [ ] Obtener aprobación de TI y verificar producción.
