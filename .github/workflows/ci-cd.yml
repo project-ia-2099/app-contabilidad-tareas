@@ -6,12 +6,23 @@ on:
     paths:
       - 'backend/**'
       - 'frontend/**'
+      - '.github/workflows/ci-cd.yml'
+      - '.github/scripts/**'
   push:
     branches: [ main ]
     paths:
       - 'backend/**'
       - 'frontend/**'
+      - '.github/workflows/ci-cd.yml'
+      - '.github/scripts/**'
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tareas-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   REGION: us-central1
@@ -30,7 +41,7 @@ jobs:
 
       - name: Escaneo de Secretos Expuestos (Cero Exposición)
         run: |
-          if grep -RInE "Password\s*=|User Id\s*=|AccountKey\s*=" backend/Books.Api/appsettings*.json backend/Books.Domain backend/Books.Application; then
+          if grep -RInE "Password\s*=|User Id\s*=|AccountKey\s*=" backend/Tareas.Api/appsettings*.json backend/Tareas.Domain backend/Tareas.Application; then
             echo "❌ ERROR DE SEGURIDAD: Se detectaron credenciales hardcodeadas en el código o appsettings."
             exit 1
           fi
@@ -129,6 +140,12 @@ jobs:
           image: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ github.event.repository.name }}-web-qa:${{ github.sha }}
           flags: --allow-unauthenticated --port=8080
 
+      - name: Verificar la aplicación desplegada
+        env:
+          API_URL: ${{ steps.deploy-api-qa.outputs.url }}
+          WEB_URL: ${{ steps.deploy-web-qa.outputs.url }}
+        run: bash .github/scripts/smoke-test.sh
+
       - name: Publicar Enlaces Oficiales de QA
         run: |
           echo "### 🚀 Entorno QA Desplegado (Google Cloud Run)" >> $GITHUB_STEP_SUMMARY
@@ -191,6 +208,12 @@ jobs:
           image: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ github.event.repository.name }}-web-prod:${{ github.sha }}
           flags: --allow-unauthenticated --port=8080
 
+      - name: Verificar la aplicación desplegada
+        env:
+          API_URL: ${{ steps.deploy-api-prod.outputs.url }}
+          WEB_URL: ${{ steps.deploy-web-prod.outputs.url }}
+        run: bash .github/scripts/smoke-test.sh
+
       - name: Publicar Enlaces Oficiales de Producción
         run: |
           echo "### 🏆 Entorno Producción Desplegado (Google Cloud Run)" >> $GITHUB_STEP_SUMMARY
@@ -199,4 +222,3 @@ jobs:
           echo "| **Frontend Web (PROD)** | ${{ steps.deploy-web-prod.outputs.url }} | - |" >> $GITHUB_STEP_SUMMARY
           echo "| **Backend API (PROD)** | ${{ steps.deploy-api-prod.outputs.url }} | \`db-connection-string-prod:latest\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Healthcheck API (PROD)** | ${{ steps.deploy-api-prod.outputs.url }}/health | \`ConnectionStrings__DefaultConnection\` |" >> $GITHUB_STEP_SUMMARY
-
